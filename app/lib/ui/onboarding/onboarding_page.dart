@@ -26,10 +26,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _finish() {
-    widget.onDone?.call();
+    // Do not call onDone before pushing pairing — onDone unmounts this page
+    // (OnboardingGate swaps in HomeShell) and then Navigator.of(context) throws.
+    final complete = widget.onDone;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PairingPage(onDone: () => Navigator.of(context).pop()),
+        builder: (ctx) => PairingPage(
+          onDone: () {
+            Navigator.of(ctx).pop();
+            complete?.call();
+          },
+        ),
       ),
     );
   }

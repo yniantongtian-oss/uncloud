@@ -25,6 +25,19 @@ void main() {
     expect(find.text('Next'), findsOneWidget);
   });
 
+  testWidgets('Skip opens pairing without crashing', (tester) async {
+    final locale = LocaleController();
+    await locale.load();
+
+    await tester.pumpWidget(UncloudApp(localeController: locale));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pair devices'), findsOneWidget);
+  });
+
   testWidgets('Onboarding next advances to page 2', (tester) async {
     final locale = LocaleController();
     await locale.load();
