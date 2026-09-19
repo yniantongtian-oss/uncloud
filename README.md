@@ -79,7 +79,7 @@ node bin/uncloud.js scan
 node bin/uncloud.js serve
 
 # Send a file to a paired device
-node bin/uncloud.js send path/to/photo.jpg
+node bin/uncloud.js send path/to/photo.jpg --to 192.168.1.42:47778
 
 # Print the QR pairing payload for this device
 node bin/uncloud.js pair

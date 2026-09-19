@@ -75,7 +75,7 @@ node bin/uncloud.js scan
 node bin/uncloud.js serve
 
 # 向已配对的设备发送文件
-node bin/uncloud.js send path/to/photo.jpg
+node bin/uncloud.js send path/to/photo.jpg --to 192.168.1.42:47778
 
 # 打印本设备的二维码配对信息
 node bin/uncloud.js pair
