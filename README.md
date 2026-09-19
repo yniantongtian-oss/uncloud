@@ -15,6 +15,10 @@ A local-first photo & file manager that syncs your phone ↔ PC directly over yo
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Uncloud architecture — phone and PC talk over LAN only" width="820"/>
+</p>
+
 ---
 
 ## Why Uncloud?
