@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Flutter `pub get` on current stable: `intl` is `>=0.19.0 <0.21.0` so it matches `flutter_localizations` (needs `intl ^0.20.3`).
+- Desktop CLI transport now calls `uncloud send <file> --to host:port` (the real CLI), and queues include the peer LAN address.
+- `core/package.json` license field now matches the Apache-2.0 `LICENSE` file.
+- Markdown lint config so README HTML/screenshots are allowed; CI markdown job is no longer a wall of false positives.
+
+### Changed
+
+- README feature list matches v0.1: auto backup / map / local AI are labeled as upcoming.
+
 ## [0.1.0] — Initial release
 
 ### Added

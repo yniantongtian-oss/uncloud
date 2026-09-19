@@ -38,12 +38,12 @@ Your photos are the most personal data you own — and today every "easy" option
 
 ## Features
 
-- 📸 **Auto photo backup** — new shots land on your PC whenever both devices are on the same network.
-- 🔀 **Phone ↔ PC direct transfer** — any file, any size, raw TCP over LAN at wire speed.
-- 🖼 **Timeline & map views** — a real gallery experience, not a folder tree.
-- 🤖 **Local AI** — on-device dedupe & face grouping *(coming soon)*. Nothing is uploaded for "intelligence".
-- 🔐 **End-to-end encrypted** — ed25519 device identity today; X25519 + ChaCha20-Poly1305 wire encryption lands in v0.2.
+- 🔀 **Phone ↔ PC direct transfer** — any file, any size, raw TCP over LAN with SHA-256 verification.
+- 🔐 **Device identity** — ed25519 keys today; X25519 + ChaCha20-Poly1305 wire encryption is v0.2.
 - 🌐 **EN / 中文 UI** — English by default, one-tap switch to Simplified Chinese.
+- 🖼 **Timeline in the app** — gallery shell now; map view is v0.3.
+- 📸 **Auto camera-roll backup** — *v0.2*. Pairing + one-shot send work in v0.1.
+- 🤖 **Local AI** — on-device dedupe & face grouping *(v0.3)*. Nothing is uploaded.
 
 ## How it compares
 
@@ -97,7 +97,7 @@ flutter pub get
 flutter run          # pick a device: phone, desktop, or emulator
 ```
 
-Release builds, e.g. Android: `flutter build apk --release`. Requires the Flutter stable channel.
+Release builds, e.g. Android: `flutter build apk --release`. Flutter stable; the app pins `intl` to `>=0.19.0 <0.21.0` so it resolves against current `flutter_localizations`.
 
 ## Architecture
 

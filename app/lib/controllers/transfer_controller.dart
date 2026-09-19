@@ -44,12 +44,14 @@ class TransferController extends ChangeNotifier {
     required int totalBytes,
     required TransferDirection direction,
     required String peerName,
+    String? peerAddress,
   }) {
     return _service.enqueue(
       fileName: fileName,
       totalBytes: totalBytes,
       direction: direction,
       peerName: peerName,
+      peerAddress: peerAddress,
     );
   }
 

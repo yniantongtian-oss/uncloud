@@ -18,7 +18,7 @@ abstract class TransferTransport {
   Stream<TransferTask> run(TransferTask task);
 }
 
-/// Desktop transport: `uncloud send <file> <peer>` / `uncloud receive ...`.
+/// Desktop transport: `uncloud send <file> --to host:port`.
 class CliTransferTransport implements TransferTransport {
   const CliTransferTransport({this.cliPath = 'uncloud'});
 
@@ -26,14 +26,12 @@ class CliTransferTransport implements TransferTransport {
 
   @override
   Stream<TransferTask> run(TransferTask task) async* {
-    final args = <String>[
-      task.direction == TransferDirection.send ? 'send' : 'receive',
-      task.fileName,
-      task.peerName,
-      '--json',
-    ];
-    // TODO(core integration): parse streaming JSON progress from stdout and
-    // yield updated task snapshots. Kept unexecuted in demo builds.
+    if (task.direction != TransferDirection.send) {
+      yield task.copyWith(status: TransferStatus.failed);
+      return;
+    }
+    final to = task.peerAddress ?? task.peerName;
+    final args = <String>['send', task.fileName, '--to', to];
     final result = await Process.run(cliPath, args);
     if (result.exitCode == 0) {
       yield task.copyWith(bytes: task.totalBytes, status: TransferStatus.done);
@@ -102,6 +100,7 @@ class TransferService {
     required int totalBytes,
     required TransferDirection direction,
     required String peerName,
+    String? peerAddress,
   }) {
     final task = TransferTask(
       id: 'task-${DateTime.now().microsecondsSinceEpoch}-${_seq++}',
@@ -111,6 +110,7 @@ class TransferService {
       direction: direction,
       status: TransferStatus.queued,
       peerName: peerName,
+      peerAddress: peerAddress,
     );
     _tasks.insert(0, task);
     _emit();

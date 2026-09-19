@@ -192,6 +192,7 @@ class _DeviceDetailSheet extends StatelessWidget {
                     totalBytes: (4 + i) * 1024 * 1024,
                     direction: TransferDirection.send,
                     peerName: device.name,
+                    peerAddress: '${device.host}:${device.port}',
                   );
                 }
                 Navigator.of(context).pop();
