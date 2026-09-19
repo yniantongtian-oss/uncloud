@@ -15,6 +15,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/app-screenshots.png" alt="Uncloud 应用界面 — 设备配对、时间线、传输" width="880"/>
+</p>
+
 ---
 
 ## 为什么做 Uncloud？
