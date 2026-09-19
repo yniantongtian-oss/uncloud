@@ -1,0 +1,53 @@
+name: ✨ Feature request
+description: Suggest an idea for Uncloud
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Uncloud's north star: **no cloud, no account, no server** — everything stays on the
+        user's devices. Requests that fit that philosophy are most likely to land.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the pain point or use case, not just the feature.
+      placeholder: "After a trip I have hundreds of near-duplicate photos and no way to…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like Uncloud to do? UI sketches and CLI examples welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Other apps, manual workflows, or workarounds you use today.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Uncloud?
+      options:
+        - App (Flutter UI)
+        - Core engine / CLI
+        - Protocol
+        - Docs / other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the roadmap (docs/roadmap.md) and existing issues.
+          required: true

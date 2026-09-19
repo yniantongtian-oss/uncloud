@@ -1,0 +1,14 @@
+{
+  "name": "uncloud-core",
+  "version": "0.1.0",
+  "description": "Local-first, zero-cloud tool to manage/sync photos & files between phone and PC over LAN. Node.js stdlib only.",
+  "type": "module",
+  "bin": {
+    "uncloud": "./bin/uncloud.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "demo": "node bin/uncloud.js demo"
+  },
+  "license": "MIT"
+}

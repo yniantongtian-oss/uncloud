@@ -1,0 +1,78 @@
+name: 🐛 Bug report
+description: Something went wrong with Uncloud
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Uncloud runs entirely on **your** devices,
+        so details about your setup matter a lot.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: "When I tap 'Send' on my phone, the PC receiver never shows the file…"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Uncloud version
+      description: App version, or `git rev-parse HEAD` / release tag if you built from source.
+      placeholder: "v0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device where the bug occurs
+      options:
+        - Android phone
+        - iPhone
+        - Windows PC
+        - macOS
+        - Linux
+        - Multiple devices (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: "Android 14 · Windows 11 23H2 · macOS 15 …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `node bin/uncloud.js serve` on the PC
+        2. Open the app on the phone
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / output
+      description: CLI output, `flutter run` logs, screenshots. Redact device names/IPs if you prefer.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: Both devices were on the same LAN (for sync/transfer bugs).
+          required: false
