@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - README feature list matches v0.1: auto backup / map / local AI are labeled as upcoming.
+- Desktop app talks to the Node core when `core/bin/uncloud.js` is present: LAN scan, pairing QR from the real identity, file send via CLI, and a background `uncloud serve` receiver into Documents/Uncloud.
+- Flutter Android / Windows / web platform folders generated so the app can actually be built.
+- Pairing accepts the core `uncloud://` + base64url JSON payload (CLI QR) as well as the older query-string form.
 
 ## [0.1.0] — Initial release
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,10 @@ import 'controllers/settings_controller.dart';
 import 'controllers/transfer_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
+import 'services/core_cli.dart';
+import 'services/discovery_service.dart';
+import 'services/receiver_service.dart';
+import 'services/transfer_service.dart';
 import 'ui/home/home_shell.dart';
 import 'ui/onboarding/onboarding_page.dart';
 
@@ -15,26 +20,61 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final localeController = LocaleController();
   await localeController.load();
-  runApp(UncloudApp(localeController: localeController));
+
+  CoreCli? cli;
+  ReceiverService? receiver;
+  if (!kIsWeb) {
+    cli = await CoreCli.detect();
+    if (cli != null) {
+      receiver = ReceiverService(cli);
+      await receiver.start();
+    }
+  }
+
+  runApp(UncloudApp(
+    localeController: localeController,
+    coreCli: cli,
+    receiver: receiver,
+  ));
 }
 
 /// Root widget: wires providers, theme and localization.
 class UncloudApp extends StatelessWidget {
-  const UncloudApp({super.key, required this.localeController});
+  const UncloudApp({
+    super.key,
+    required this.localeController,
+    this.coreCli,
+    this.receiver,
+  });
 
   final LocaleController localeController;
+  final CoreCli? coreCli;
+  final ReceiverService? receiver;
 
   @override
   Widget build(BuildContext context) {
+    final useCore = coreCli != null;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<LocaleController>.value(value: localeController),
         ChangeNotifierProvider<SettingsController>(
             create: (_) => SettingsController()),
         ChangeNotifierProvider<DevicesController>(
-            create: (_) => DevicesController()),
+          create: (_) => DevicesController(
+            discovery: DiscoveryService(demo: !useCore, cli: coreCli),
+          ),
+        ),
         ChangeNotifierProvider<TransferController>(
-            create: (_) => TransferController()),
+          create: (_) => TransferController(
+            service: TransferService(
+              transport: useCore
+                  ? CliTransferTransport(coreCli!)
+                  : const DemoTransferTransport(),
+            ),
+          ),
+        ),
+        Provider<ReceiverService?>.value(value: receiver),
+        Provider<CoreCli?>.value(value: coreCli),
       ],
       child: Consumer2<LocaleController, SettingsController>(
         builder: (context, locale, settings, _) {

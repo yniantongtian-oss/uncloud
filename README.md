@@ -97,7 +97,9 @@ flutter pub get
 flutter run          # pick a device: phone, desktop, or emulator
 ```
 
-Release builds, e.g. Android: `flutter build apk --release`. Flutter stable; the app pins `intl` to `>=0.19.0 <0.21.0` so it resolves against current `flutter_localizations`.
+On this machine the desktop app looks for `../core/bin/uncloud.js` (or `UNCLOUD_CORE`). If Node is on `PATH`, it starts `uncloud serve` and drops incoming files in `Documents/Uncloud`. Pairing QR uses the same `uncloud://` payload as `node bin/uncloud.js pair`.
+
+Release builds, e.g. Android: `flutter build apk --release`. Windows desktop needs Visual Studio “Desktop development with C++”. Flutter stable; `intl` is `>=0.19.0 <0.21.0`.
 
 ## Architecture
 

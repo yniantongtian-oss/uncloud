@@ -86,6 +86,12 @@ class AppLocalizations {
       'pairingInvalidCode': 'This QR code is not a valid Uncloud pairing code.',
       'pairingDone': 'Continue',
       'pairingScanSimTitle': 'Simulate a scan',
+      'pairingPaste': 'Paste pairing code',
+      'pairingPasteHint': 'Paste an uncloud:// code from the other device.',
+      'transfersSendFile': 'Send a file',
+      'transfersNeedPeer': 'Pair a device first, then send a file.',
+      'transfersPickFailed': 'Could not read that file.',
+      'receiveInbox': 'Receiving into {dir}',
       'pairingScanSimBody':
           'Camera scanning is stubbed in demo mode. Pick a device to simulate scanning its QR code.',
 
@@ -219,6 +225,12 @@ class AppLocalizations {
       'pairingInvalidCode': '此二维码不是有效的 Uncloud 配对码。',
       'pairingDone': '继续',
       'pairingScanSimTitle': '模拟扫码',
+      'pairingPaste': '粘贴配对码',
+      'pairingPasteHint': '粘贴另一台设备上的 uncloud:// 配对码。',
+      'transfersSendFile': '发送文件',
+      'transfersNeedPeer': '请先配对设备，再发送文件。',
+      'transfersPickFailed': '无法读取该文件。',
+      'receiveInbox': '正在接收到 {dir}',
       'pairingScanSimBody': '演示模式下相机扫码为占位功能。请选择一个设备以模拟扫描其配对码。',
 
       // 时间线
@@ -346,6 +358,8 @@ class AppLocalizations {
   String get pairingInvalidCode => _t('pairingInvalidCode');
   String get pairingDone => _t('pairingDone');
   String get pairingScanSimTitle => _t('pairingScanSimTitle');
+  String get pairingPaste => _t('pairingPaste');
+  String get pairingPasteHint => _t('pairingPasteHint');
   String get pairingScanSimBody => _t('pairingScanSimBody');
 
   // Timeline
@@ -403,6 +417,10 @@ class AppLocalizations {
   String get transfersHistory => _t('transfersHistory');
   String get transfersEmptyTitle => _t('transfersEmptyTitle');
   String get transfersEmptyBody => _t('transfersEmptyBody');
+  String get transfersSendFile => _t('transfersSendFile');
+  String get transfersNeedPeer => _t('transfersNeedPeer');
+  String get transfersPickFailed => _t('transfersPickFailed');
+  String receiveInbox(String dir) => _p('receiveInbox', {'dir': dir});
   String get transferQueued => _t('transferQueued');
   String get transferActive => _t('transferActive');
   String get transferDone => _t('transferDone');

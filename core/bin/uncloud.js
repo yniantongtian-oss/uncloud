@@ -34,8 +34,8 @@ Usage: uncloud <command> [options]
 
 Commands:
   id                                Show deviceId, name and key fingerprint
-  scan [--timeout ms]               Discover peers on the LAN (default 4000 ms)
-  pair [--port 47778]               Print this device's pairing payload (for QR)
+  scan [--timeout ms] [--json]      Discover peers on the LAN (default 4000 ms)
+  pair [--port 47778] [--json]      Print this device's pairing payload (for QR)
   serve [--port 47778] [--dir ./uncloud-inbox]
                                     Run the receiver server + announce via discovery
   send <file> --to <host:port>      Send a file (progress bar on stderr)
@@ -140,14 +140,19 @@ function cmdId() {
 async function cmdScan(args) {
   const { values } = parseCommandArgs(
     args,
-    { timeout: { type: 'string', default: '4000' } },
-    'Usage: uncloud scan [--timeout ms]',
+    {
+      timeout: { type: 'string', default: '4000' },
+      json: { type: 'boolean', default: false },
+    },
+    'Usage: uncloud scan [--timeout ms] [--json]',
   );
   const timeoutMs = parseIntOption(values.timeout, 'timeout');
   const identity = requireIdentity();
 
-  console.error(`Scanning for peers on the LAN for ${timeoutMs} ms (multicast group 239.255.77.77:${DISCOVERY_PORT})...`);
-  const discovery = startDiscovery({ port: 0, name: identity.name, deviceId: identity.deviceId });
+  if (!values.json) {
+    console.error(`Scanning for peers on the LAN for ${timeoutMs} ms (multicast group 239.255.77.77:${DISCOVERY_PORT})...`);
+  }
+  const discovery = startDiscovery({ port: DEFAULT_PORT, name: identity.name, deviceId: identity.deviceId });
   discovery.on('error', (err) => {
     printError(`discovery error: ${err.message}`);
     discovery.stop();
@@ -157,6 +162,11 @@ async function cmdScan(args) {
   await new Promise((resolve) => setTimeout(resolve, timeoutMs));
   const peers = discovery.peers;
   discovery.stop();
+
+  if (values.json) {
+    console.log(JSON.stringify(peers));
+    return;
+  }
 
   if (peers.length === 0) {
     console.log('No peers found.');
@@ -175,8 +185,11 @@ async function cmdScan(args) {
 function cmdPair(args) {
   const { values } = parseCommandArgs(
     args,
-    { port: { type: 'string', default: String(DEFAULT_PORT) } },
-    'Usage: uncloud pair [--port 47778]',
+    {
+      port: { type: 'string', default: String(DEFAULT_PORT) },
+      json: { type: 'boolean', default: false },
+    },
+    'Usage: uncloud pair [--port 47778] [--json]',
   );
   const port = parseIntOption(values.port, 'port');
   const identity = requireIdentity();
@@ -189,6 +202,17 @@ function cmdPair(args) {
     port,
     publicKeyDer: publicKeyDer(identity),
   });
+
+  if (values.json) {
+    console.log(JSON.stringify({
+      payload,
+      deviceId: identity.deviceId,
+      name: identity.name,
+      host,
+      port,
+    }));
+    return;
+  }
 
   console.log(`Pairing payload for "${identity.name}" (${host}:${port}):`);
   console.log(payload);

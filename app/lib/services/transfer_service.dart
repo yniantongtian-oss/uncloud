@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/services.dart';
 
 import '../models/transfer_task.dart';
+import 'core_cli.dart';
 
 /// Abstract transport for moving files to/from a peer.
 ///
@@ -20,9 +20,9 @@ abstract class TransferTransport {
 
 /// Desktop transport: `uncloud send <file> --to host:port`.
 class CliTransferTransport implements TransferTransport {
-  const CliTransferTransport({this.cliPath = 'uncloud'});
+  const CliTransferTransport(this.cli);
 
-  final String cliPath;
+  final CoreCli cli;
 
   @override
   Stream<TransferTask> run(TransferTask task) async* {
@@ -30,9 +30,10 @@ class CliTransferTransport implements TransferTransport {
       yield task.copyWith(status: TransferStatus.failed);
       return;
     }
+    yield task.copyWith(status: TransferStatus.active);
     final to = task.peerAddress ?? task.peerName;
-    final args = <String>['send', task.fileName, '--to', to];
-    final result = await Process.run(cliPath, args);
+    final file = task.filePath ?? task.fileName;
+    final result = await cli.run(['send', file, '--to', to]);
     if (result.exitCode == 0) {
       yield task.copyWith(bytes: task.totalBytes, status: TransferStatus.done);
     } else {
@@ -101,6 +102,7 @@ class TransferService {
     required TransferDirection direction,
     required String peerName,
     String? peerAddress,
+    String? filePath,
   }) {
     final task = TransferTask(
       id: 'task-${DateTime.now().microsecondsSinceEpoch}-${_seq++}',
@@ -111,6 +113,7 @@ class TransferService {
       status: TransferStatus.queued,
       peerName: peerName,
       peerAddress: peerAddress,
+      filePath: filePath,
     );
     _tasks.insert(0, task);
     _emit();

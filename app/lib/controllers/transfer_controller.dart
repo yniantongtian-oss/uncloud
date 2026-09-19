@@ -45,6 +45,7 @@ class TransferController extends ChangeNotifier {
     required TransferDirection direction,
     required String peerName,
     String? peerAddress,
+    String? filePath,
   }) {
     return _service.enqueue(
       fileName: fileName,
@@ -52,6 +53,7 @@ class TransferController extends ChangeNotifier {
       direction: direction,
       peerName: peerName,
       peerAddress: peerAddress,
+      filePath: filePath,
     );
   }
 

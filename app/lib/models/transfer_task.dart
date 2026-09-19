@@ -15,6 +15,7 @@ class TransferTask {
     required this.status,
     required this.peerName,
     this.peerAddress,
+    this.filePath,
   });
 
   final String id;
@@ -35,6 +36,9 @@ class TransferTask {
   /// LAN endpoint `host:port` for the core CLI (`uncloud send --to`).
   final String? peerAddress;
 
+  /// Absolute path used by the desktop CLI. Null in demo mode.
+  final String? filePath;
+
   /// 0.0–1.0 progress; 0 when total size is unknown.
   double get progress =>
       totalBytes > 0 ? (bytes / totalBytes).clamp(0.0, 1.0) : 0.0;
@@ -51,6 +55,7 @@ class TransferTask {
     TransferStatus? status,
     String? peerName,
     String? peerAddress,
+    String? filePath,
   }) {
     return TransferTask(
       id: id ?? this.id,
@@ -61,6 +66,7 @@ class TransferTask {
       status: status ?? this.status,
       peerName: peerName ?? this.peerName,
       peerAddress: peerAddress ?? this.peerAddress,
+      filePath: filePath ?? this.filePath,
     );
   }
 
@@ -73,6 +79,7 @@ class TransferTask {
         'status': status.name,
         'peerName': peerName,
         if (peerAddress != null) 'peerAddress': peerAddress,
+        if (filePath != null) 'filePath': filePath,
       };
 
   factory TransferTask.fromJson(Map<String, dynamic> json) => TransferTask(
@@ -84,5 +91,6 @@ class TransferTask {
         status: TransferStatus.values.byName(json['status'] as String),
         peerName: json['peerName'] as String,
         peerAddress: json['peerAddress'] as String?,
+        filePath: json['filePath'] as String?,
       );
 }

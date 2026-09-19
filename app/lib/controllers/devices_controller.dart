@@ -37,6 +37,7 @@ class DevicesController extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    await _discovery.refreshIdentity();
     // Restore persisted paired devices first.
     for (final d in await _pairing.loadPaired()) {
       _devices[d.deviceId] = d;

@@ -98,7 +98,54 @@ class _MyQrCard extends StatelessWidget {
               icon: const Icon(Icons.qr_code_scanner),
               label: Text(l10n.pairingScan),
             ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => _pasteCode(context),
+              icon: const Icon(Icons.content_paste),
+              label: Text(l10n.pairingPaste),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pasteCode(BuildContext pageContext) async {
+    final l10n = pageContext.l10n;
+    final controller = TextEditingController();
+    final raw = await showDialog<String>(
+      context: pageContext,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.pairingPaste),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 3,
+          decoration: InputDecoration(hintText: l10n.pairingPasteHint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (raw == null || raw.trim().isEmpty || !pageContext.mounted) return;
+    final paired =
+        await pageContext.read<DevicesController>().pairFromPayload(raw);
+    if (!pageContext.mounted) return;
+    ScaffoldMessenger.of(pageContext).showSnackBar(
+      SnackBar(
+        content: Text(
+          paired != null
+              ? l10n.pairingSuccess(paired.name)
+              : l10n.pairingInvalidCode,
         ),
       ),
     );
