@@ -11,7 +11,7 @@ A local-first photo & file manager that syncs your phone ↔ PC directly over yo
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![GitHub stars](https://img.shields.io/github/stars/yniantongtian-oss/uncloud?style=social)](https://github.com/yniantongtian-oss/uncloud/stargazers)
 
-**[English](README.md) · [简体中文](README.zh-CN.md) · [Documentation](docs/)**
+**[English](README.md) · [Simplified Chinese](README.zh-CN.md) · [Documentation](docs/)**
 
 </div>
 
@@ -53,7 +53,7 @@ Your photos are the most personal data you own — and today every "easy" option
 | No account required      |   ✅    |   ✅   |     ✅     |    ✅     |    ✅     |      ❌       |
 | Gallery UX (timeline/map)|   ✅    |   ✅   |     ✅     |    ❌     |    ❌     |      ✅       |
 | General file manager     |   ✅    |   ❌   |     ❌     |    ✅     |    ✅     |      ❌       |
-| End-to-end encrypted     |   ✅²   |   ❌³   |     ❌     |    ✅     |    ✅     |      ❌       |
+| End-to-end encrypted     |   Planned²   |   ❌³   |     ❌     |    ✅     |    ✅     |      ❌       |
 | 100% free                |   ✅    |   ✅   |     ✅     |    ✅     |    ✅     |      ❌       |
 
 ¹ immich requires a self-hosted server (Docker). ² Wire encryption ships in v0.2; device identity and SHA-256 integrity verification are in place today. ³ immich encrypts traffic in transit only if you configure TLS / a reverse proxy yourself.
@@ -109,7 +109,7 @@ Release builds, e.g. Android: `flutter build apk --release`. Windows desktop nee
 │  (Flutter)   │ ─ ─ ─ announce every 2 s ─ ─ ─ ─ ─ ─ ▶ │  core engine │
 │              │                                        │ (Node.js,    │
 │  gallery UI  │  ② QR pairing: uncloud:// + base64url  │  zero-dep)   │
-│  EN / 中文   │ ◀ ─ ─ ─ {v, deviceId, name, pub…} ─ ─  │              │
+│ EN / ZH      │ ◀ ─ ─ ─ {v, deviceId, name, pub…} ─ ─  │              │
 │              │                                        │  ed25519 id  │
 │              │  ③ TCP transfer                        │  JSON index  │
 │              │ ════ {name,size,sha256}\n + 64 KB ═══▶ │  on disk     │
