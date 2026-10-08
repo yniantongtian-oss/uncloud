@@ -40,7 +40,7 @@ Your photos are the most personal data you own — and today every "easy" option
 
 - 🔀 **Phone ↔ PC direct transfer** — any file, any size, raw TCP over LAN with SHA-256 verification.
 - 🔐 **Device identity** — ed25519 keys today; X25519 + ChaCha20-Poly1305 wire encryption is v0.2.
-- 🌐 **EN / 中文 UI** — English by default, one-tap switch to Simplified Chinese.
+- 🌐 **English / Simplified Chinese UI** — English by default, one-tap switch to Simplified Chinese.
 - 🖼 **Timeline in the app** — gallery shell now; map view is v0.3.
 - 📸 **Auto camera-roll backup** — *v0.2*. Pairing + one-shot send work in v0.1.
 - 🤖 **Local AI** — on-device dedupe & face grouping *(v0.3)*. Nothing is uploaded.
