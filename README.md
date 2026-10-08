@@ -47,14 +47,14 @@ Your photos are the most personal data you own — and today every "easy" option
 
 ## How it compares
 
-|                          | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
-| ------------------------ | :-----: | :----: | :--------: | :-------: | :-------: | :-----------: |
-| No server needed         |   ✅    |   ❌¹   |     ❌     |    ✅     |    ✅     |      ❌       |
-| No account required      |   ✅    |   ✅   |     ✅     |    ✅     |    ✅     |      ❌       |
-| Gallery UX (timeline/map)|   ✅    |   ✅   |     ✅     |    ❌     |    ❌     |      ✅       |
-| General file manager     |   ✅    |   ❌   |     ❌     |    ✅     |    ✅     |      ❌       |
-| End-to-end encrypted     |   Planned²   |   ❌³   |     ❌     |    ✅     |    ✅     |      ❌       |
-| 100% free                |   ✅    |   ✅   |     ✅     |    ✅     |    ✅     |      ❌       |
+|  | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| No server needed | ✅ | ❌¹ | ❌ | ✅ | ✅ | ❌ |
+| No account required | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Gallery UX (timeline/map) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| General file manager | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| End-to-end encrypted | Planned² | ❌³ | ❌ | ✅ | ✅ | ❌ |
+| 100% free | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 
 ¹ immich requires a self-hosted server (Docker). ² Wire encryption ships in v0.2; device identity and SHA-256 integrity verification are in place today. ³ immich encrypts traffic in transit only if you configure TLS / a reverse proxy yourself.
 
