@@ -51,9 +51,8 @@ jobs:
         run: flutter test
 
   markdown:
-    name: Markdown lint (optional)
+    name: Markdown lint
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -43,7 +43,7 @@
 
 ## 与同类方案对比
 
-|  | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
+| | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
 | 无需服务器 | ✅ | ❌¹ | ❌ | ✅ | ✅ | ❌ |
 | 无需账号 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |

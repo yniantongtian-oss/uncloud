@@ -47,7 +47,7 @@ Your photos are the most personal data you own — and today every "easy" option
 
 ## How it compares
 
-|  | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
+| | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
 | No server needed | ✅ | ❌¹ | ❌ | ✅ | ✅ | ❌ |
 | No account required | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |

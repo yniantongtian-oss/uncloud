@@ -4,7 +4,7 @@ An honest comparison. Every tool below is good at something — the goal here is
 
 ## Quick matrix
 
-|  | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
+| | Uncloud | immich | PhotoPrism | Syncthing | LocalSend | Google Photos |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
 | No server needed | ✅ | ❌¹ | ❌ | ✅ | ✅ | ❌ |
 | No account required | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
