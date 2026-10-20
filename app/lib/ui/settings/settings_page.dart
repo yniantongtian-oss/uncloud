@@ -132,7 +132,7 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _pickFolder(BuildContext context) async {
     try {
-      final path = await FilePicker.platform.getDirectoryPath(
+      final path = await FilePicker.getDirectoryPath(
         dialogTitle: context.l10n.settingsBackupFolder,
       );
       if (path != null && context.mounted) {

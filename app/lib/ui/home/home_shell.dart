@@ -32,20 +32,27 @@ class _HomeShellState extends State<HomeShell> {
       );
       return;
     }
-    final picked = await FilePicker.platform.pickFiles();
+    final file = await FilePicker.pickFile();
     if (!context.mounted) return;
-    final file = picked?.files.single;
     if (file == null || file.path == null) {
-      if (picked != null) {
+      if (file != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.transfersPickFailed)),
         );
       }
       return;
     }
+    final size = await file.length();
+    if (!context.mounted) return;
+    if (size == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.transfersPickFailed)),
+      );
+      return;
+    }
     context.read<TransferController>().enqueue(
           fileName: file.name,
-          totalBytes: file.size,
+          totalBytes: size,
           direction: TransferDirection.send,
           peerName: peer.name,
           peerAddress: '${peer.host}:${peer.port}',
