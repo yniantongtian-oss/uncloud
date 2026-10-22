@@ -37,10 +37,12 @@ class TransfersPage extends StatelessWidget {
         if (history.isNotEmpty) ...[
           SectionHeader(
             l10n.transfersHistory,
-            trailing: TextButton(
-              onPressed: controller.clearFinished,
-              child: Text(l10n.transferClearDone),
-            ),
+            trailing: history.any((task) => task.status == TransferStatus.done)
+                ? TextButton(
+                    onPressed: controller.clearFinished,
+                    child: Text(l10n.transferClearDone),
+                  )
+                : null,
           ),
           for (final t in history) _TransferTile(task: t),
         ],
@@ -61,6 +63,7 @@ class _TransferTile extends StatelessWidget {
       TransferStatus.active => l10n.transferActive,
       TransferStatus.done => l10n.transferDone,
       TransferStatus.failed => l10n.transferFailed,
+      TransferStatus.cancelled => l10n.transferCancelled,
     };
   }
 
@@ -109,9 +112,7 @@ class _TransferTile extends StatelessWidget {
             ),
             if (isActive || isQueued) ...[
               const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: isQueued ? null : task.progress,
-              ),
+              LinearProgressIndicator(value: isQueued ? 0 : task.progress),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -139,7 +140,8 @@ class _TransferTile extends StatelessWidget {
                     onPressed: () => controller.cancel(task.id),
                     child: Text(l10n.transferCancel),
                   ),
-                if (task.status == TransferStatus.failed)
+                if (task.status == TransferStatus.failed ||
+                    task.status == TransferStatus.cancelled)
                   TextButton(
                     onPressed: () => controller.retry(task.id),
                     child: Text(l10n.transferRetry),

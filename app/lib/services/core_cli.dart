@@ -30,58 +30,80 @@ class CoreCli {
     return null;
   }
 
-  static String _join(List<String> parts) =>
-      parts.join(Platform.pathSeparator);
+  static String _join(List<String> parts) => parts.join(Platform.pathSeparator);
 
   Future<bool> isAlive() async {
     try {
-      final r = await run(const ['help']);
-      return r.exitCode == 0 || (r.stdout as String).contains('uncloud');
-    } catch (_) {
+      final result = await run(const ['help']);
+      final stdout = result.stdout;
+      final text = stdout is String ? stdout : '';
+      return result.exitCode == 0 || text.contains('uncloud');
+    } on Object {
       return false;
     }
   }
 
   Future<ProcessResult> run(List<String> args) {
-    return Process.run(
-      nodeExecutable,
-      [scriptPath, ...args],
-      workingDirectory: File(scriptPath).parent.parent.path,
-    );
+    return Process.run(nodeExecutable, [
+      scriptPath,
+      ...args,
+    ], workingDirectory: File(scriptPath).parent.parent.path);
   }
 
   Future<Process> start(List<String> args) {
-    return Process.start(
-      nodeExecutable,
-      [scriptPath, ...args],
-      workingDirectory: File(scriptPath).parent.parent.path,
-    );
+    return Process.start(nodeExecutable, [
+      scriptPath,
+      ...args,
+    ], workingDirectory: File(scriptPath).parent.parent.path);
   }
 
   Future<List<PeerDevice>> scan({int timeoutMs = 3000}) async {
-    final r = await run(['scan', '--json', '--timeout', '$timeoutMs']);
-    if (r.exitCode != 0) return const [];
-    final decoded = jsonDecode(r.stdout as String);
-    if (decoded is! List) return const [];
-    final now = DateTime.now();
-    return [
-      for (final item in decoded)
-        if (item is Map)
-          PeerDevice(
-            deviceId: '${item['deviceId'] ?? ''}',
-            name: '${item['name'] ?? 'peer'}',
-            host: '${item['host'] ?? ''}',
-            port: (item['port'] as num?)?.toInt() ?? 47778,
-            isPaired: false,
-            lastSeen: now,
-          ),
-    ].where((d) => d.deviceId.isNotEmpty && d.host.isNotEmpty).toList();
+    try {
+      final result = await run(['scan', '--json', '--timeout', '$timeoutMs']);
+      if (result.exitCode != 0) return const [];
+      final stdout = result.stdout;
+      if (stdout is! String) return const [];
+      final decoded = jsonDecode(stdout);
+      if (decoded is! List<dynamic>) return const [];
+      final now = DateTime.now();
+      return [
+        for (final item in decoded)
+          if (item is Map) _peerFromScan(Map<String, dynamic>.from(item), now),
+      ].whereType<PeerDevice>().toList();
+    } on Object {
+      return const [];
+    }
+  }
+
+  PeerDevice? _peerFromScan(Map<String, dynamic> item, DateTime now) {
+    final deviceId = item['deviceId'];
+    final host = item['host'];
+    final name = item['name'];
+    if (deviceId is! String || deviceId.isEmpty) return null;
+    if (host is! String || host.isEmpty) return null;
+    final portValue = item['port'];
+    final port = portValue is num ? portValue.toInt() : 47778;
+    return PeerDevice(
+      deviceId: deviceId,
+      name: name is String && name.isNotEmpty ? name : 'peer',
+      host: host,
+      port: port,
+      isPaired: false,
+      lastSeen: now,
+    );
   }
 
   Future<Map<String, dynamic>?> pairInfo({int port = 47778}) async {
-    final r = await run(['pair', '--json', '--port', '$port']);
-    if (r.exitCode != 0) return null;
-    final decoded = jsonDecode(r.stdout as String);
-    return decoded is Map<String, dynamic> ? decoded : null;
+    try {
+      final result = await run(['pair', '--json', '--port', '$port']);
+      if (result.exitCode != 0) return null;
+      final stdout = result.stdout;
+      if (stdout is! String) return null;
+      final decoded = jsonDecode(stdout);
+      if (decoded is! Map) return null;
+      return Map<String, dynamic>.from(decoded);
+    } on Object {
+      return null;
+    }
   }
 }

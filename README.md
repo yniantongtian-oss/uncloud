@@ -42,8 +42,8 @@ Your photos are the most personal data you own — and today every "easy" option
 - 🔐 **Device identity** — ed25519 keys today; X25519 + ChaCha20-Poly1305 wire encryption is v0.2.
 - 🌐 **English / Simplified Chinese UI** — English by default, one-tap switch to Simplified Chinese.
 - 🖼 **Timeline in the app** — gallery shell now; map view is v0.3.
-- 📸 **Auto camera-roll backup** — *v0.2*. Pairing + one-shot send work in v0.1.
-- 🤖 **Local AI** — on-device dedupe & face grouping *(v0.3)*. Nothing is uploaded.
+- 📸 **Local-first backup planner** — the app keeps a JSON library on the device, skips files a paired peer already has (SHA-256), and resumes from the last acknowledged byte. Watching the camera roll is still v0.2; demo mode ships a sample library.
+- 🤖 **On-device duplicates** — exact SHA-256 copies and perceptual (difference-hash) lookalikes, computed locally. Face grouping is still v0.3. Nothing is uploaded.
 
 ## How it compares
 
@@ -99,7 +99,7 @@ flutter run          # pick a device: phone, desktop, or emulator
 
 On this machine the desktop app looks for `../core/bin/uncloud.js` (or `UNCLOUD_CORE`). If Node is on `PATH`, it starts `uncloud serve` and drops incoming files in `Documents/Uncloud`. Pairing QR uses the same `uncloud://` payload as `node bin/uncloud.js pair`.
 
-Release builds, e.g. Android: `flutter build apk --release`. Windows desktop needs Visual Studio “Desktop development with C++”. Flutter stable; `intl` is `>=0.19.0 <0.21.0`.
+Release builds, e.g. Android: `flutter build apk --release`. Windows desktop needs Visual Studio “Desktop development with C++”. Flutter stable; `intl` is `>=0.20.3 <0.21.0`.
 
 ## Architecture
 
@@ -137,7 +137,7 @@ uncloud/
 | ------- | --------- |
 | **v0.1** | Core CLI + app demo: identity, discovery, pairing, transfer, JSON index |
 | **v0.2** | E2E encryption (X25519 + ChaCha20-Poly1305), automatic photo backup |
-| **v0.3** | Local AI dedupe & search, map view, SQLite index |
+| **v0.3** | Local AI search & face grouping, map view, SQLite index. Difference-hash dedupe already runs in the app. |
 | **v1.0** | iOS release, app-store distribution |
 
 Full checklist: **[docs/roadmap.md](docs/roadmap.md)**

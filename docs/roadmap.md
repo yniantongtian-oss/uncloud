@@ -21,6 +21,7 @@ Uncloud ships in small, usable increments. Each version below is a checklist; it
 
 - [ ] E2E encryption: X25519 key exchange (signed by ed25519 identity) + ChaCha20-Poly1305 records — see [protocol.md §7](protocol.md)
 - [ ] Automatic photo backup: watch the camera roll, sync new items when both devices are on the LAN
+  - App slice: the sync planner skips SHA-256s a paired peer already has and resumes from the last acknowledged byte. Demo mode uses a sample library; camera-roll watching is still open. The core CLI does not yet take a byte offset.
 - [ ] Resume interrupted transfers (offset in header, append on retry)
 - [ ] Android release build (APK on GitHub Releases)
 - [ ] In-app pairing flow (scan QR → trust → first backup) with zero CLI required
@@ -30,7 +31,7 @@ Uncloud ships in small, usable increments. Each version below is a checklist; it
 
 *Your files are on your PC; now make them a joy to browse.*
 
-- [ ] Local AI dedupe: perceptual hashing, on-device, no uploads
+- [x] Local AI dedupe: perceptual hashing, on-device, no uploads (difference hash + exact SHA-256 in the app; face grouping and semantic search are still open)
 - [ ] Local semantic search over the index
 - [ ] Face grouping (on-device, opt-in)
 - [ ] Map view from EXIF GPS

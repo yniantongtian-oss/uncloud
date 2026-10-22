@@ -16,8 +16,7 @@ void main() {
   });
 
   test('parses query-string pairing payload', () {
-    const raw =
-        'uncloud://pair/abc123?name=Phone&host=192.168.1.8&port=47778';
+    const raw = 'uncloud://pair/abc123?name=Phone&host=192.168.1.8&port=47778';
     final device = service.parsePayload(raw);
     expect(device, isNotNull);
     expect(device!.deviceId, 'abc123');

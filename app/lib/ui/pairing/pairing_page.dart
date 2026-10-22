@@ -76,21 +76,16 @@ class _MyQrCard extends StatelessWidget {
             Container(
               color: Colors.white,
               padding: const EdgeInsets.all(12),
-              child: QrImageView(
-                data: payload,
-                version: QrVersions.auto,
-                size: 200,
-              ),
+              child: QrImageView(data: payload, size: 200),
             ),
 
             const SizedBox(height: 12),
             Text(
               l10n.pairingScanHint,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -137,8 +132,9 @@ class _MyQrCard extends StatelessWidget {
     );
     controller.dispose();
     if (raw == null || raw.trim().isEmpty || !pageContext.mounted) return;
-    final paired =
-        await pageContext.read<DevicesController>().pairFromPayload(raw);
+    final paired = await pageContext.read<DevicesController>().pairFromPayload(
+      raw,
+    );
     if (!pageContext.mounted) return;
     ScaffoldMessenger.of(pageContext).showSnackBar(
       SnackBar(
@@ -158,8 +154,9 @@ class _MyQrCard extends StatelessWidget {
       context: pageContext,
       showDragHandle: true,
       builder: (sheetContext) {
-        final candidates =
-            sheetContext.watch<DevicesController>().discoveredUnpaired;
+        final candidates = sheetContext
+            .watch<DevicesController>()
+            .discoveredUnpaired;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -167,8 +164,10 @@ class _MyQrCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(l10n.pairingScanSimTitle,
-                    style: Theme.of(sheetContext).textTheme.titleMedium),
+                Text(
+                  l10n.pairingScanSimTitle,
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 Text(l10n.pairingScanSimBody),
                 const SizedBox(height: 16),
@@ -200,9 +199,11 @@ class _MyQrCard extends StatelessWidget {
                         Navigator.of(sheetContext).pop();
                         messenger.showSnackBar(
                           SnackBar(
-                            content: Text(paired != null
-                                ? l10n.pairingSuccess(paired.name)
-                                : l10n.pairingInvalidCode),
+                            content: Text(
+                              paired != null
+                                  ? l10n.pairingSuccess(paired.name)
+                                  : l10n.pairingInvalidCode,
+                            ),
                           ),
                         );
                       },
@@ -228,9 +229,9 @@ class _DiscoveredTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          child: Icon(device.host.endsWith('50')
-              ? Icons.dns_outlined
-              : Icons.computer),
+          child: Icon(
+            device.host.endsWith('50') ? Icons.dns_outlined : Icons.computer,
+          ),
         ),
         title: Text(device.name),
         subtitle: Text('${device.host}:${device.port} · ${device.shortId}'),
@@ -248,4 +249,3 @@ class _DiscoveredTile extends StatelessWidget {
     );
   }
 }
-

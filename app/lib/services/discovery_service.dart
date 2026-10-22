@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../models/device.dart';
 import 'core_cli.dart';
+import 'library_sample.dart';
 
 /// Discovers Uncloud peers on the local network.
 ///
@@ -47,8 +48,10 @@ class DiscoveryService {
       onPeers(List.unmodifiable(_peers));
     }
 
-    poll();
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) => poll());
+    unawaited(poll());
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      unawaited(poll());
+    });
   }
 
   void stop() {
@@ -65,7 +68,7 @@ class DiscoveryService {
       ..clear()
       ..addAll([
         PeerDevice(
-          deviceId: 'desk-pc-8f3a1c92',
+          deviceId: sampleDesktopPeerId,
           name: 'Desktop PC',
           host: '192.168.1.20',
           port: 47778,

@@ -28,7 +28,7 @@ node bin/uncloud.js demo       # full protocol walkthrough
 # App
 cd ../app
 flutter pub get
-flutter analyze --no-fatal-infos
+flutter analyze --fatal-infos
 flutter test
 flutter run
 ```
@@ -40,7 +40,7 @@ The core engine has **no npm dependencies by design** — please don't add one w
 - Branch from `main`: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, or `chore/<slug>`.
 - One concern per PR; small PRs get reviewed fast.
 - Fill in the PR template — especially the test plan.
-- CI must pass: `npm test` for `core/`, `flutter analyze --no-fatal-infos` + `flutter test` for `app/`.
+- CI must pass: `npm test` for `core/`, `flutter analyze --fatal-infos` + `flutter test` for `app/`.
 - Changes to behavior must update `docs/` and, where user-facing, **both** READMEs (English + 中文).
 - By contributing you agree your work is licensed under [Apache-2.0](LICENSE).
 

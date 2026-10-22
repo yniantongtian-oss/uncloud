@@ -2,7 +2,7 @@
 enum TransferDirection { send, receive }
 
 /// Lifecycle of a [TransferTask].
-enum TransferStatus { queued, active, done, failed }
+enum TransferStatus { queued, active, done, failed, cancelled }
 
 /// A single file moving between this device and a peer.
 class TransferTask {
@@ -16,6 +16,9 @@ class TransferTask {
     required this.peerName,
     this.peerAddress,
     this.filePath,
+    this.peerId,
+    this.libraryItemId,
+    this.resumeFrom = 0,
   });
 
   final String id;
@@ -39,12 +42,23 @@ class TransferTask {
   /// Absolute path used by the desktop CLI. Null in demo mode.
   final String? filePath;
 
+  /// Paired device id, when this task belongs to a library backup.
+  final String? peerId;
+
+  /// [MediaItem.id] to acknowledge when the send finishes.
+  final String? libraryItemId;
+
+  /// Byte offset already accepted by the peer. Progress starts here.
+  final int resumeFrom;
+
   /// 0.0–1.0 progress; 0 when total size is unknown.
   double get progress =>
       totalBytes > 0 ? (bytes / totalBytes).clamp(0.0, 1.0) : 0.0;
 
   bool get isFinished =>
-      status == TransferStatus.done || status == TransferStatus.failed;
+      status == TransferStatus.done ||
+      status == TransferStatus.failed ||
+      status == TransferStatus.cancelled;
 
   TransferTask copyWith({
     String? id,
@@ -56,6 +70,9 @@ class TransferTask {
     String? peerName,
     String? peerAddress,
     String? filePath,
+    String? peerId,
+    String? libraryItemId,
+    int? resumeFrom,
   }) {
     return TransferTask(
       id: id ?? this.id,
@@ -67,30 +84,39 @@ class TransferTask {
       peerName: peerName ?? this.peerName,
       peerAddress: peerAddress ?? this.peerAddress,
       filePath: filePath ?? this.filePath,
+      peerId: peerId ?? this.peerId,
+      libraryItemId: libraryItemId ?? this.libraryItemId,
+      resumeFrom: resumeFrom ?? this.resumeFrom,
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'fileName': fileName,
-        'bytes': bytes,
-        'totalBytes': totalBytes,
-        'direction': direction.name,
-        'status': status.name,
-        'peerName': peerName,
-        if (peerAddress != null) 'peerAddress': peerAddress,
-        if (filePath != null) 'filePath': filePath,
-      };
+    'id': id,
+    'fileName': fileName,
+    'bytes': bytes,
+    'totalBytes': totalBytes,
+    'direction': direction.name,
+    'status': status.name,
+    'peerName': peerName,
+    if (peerAddress != null) 'peerAddress': peerAddress,
+    if (filePath != null) 'filePath': filePath,
+    if (peerId != null) 'peerId': peerId,
+    if (libraryItemId != null) 'libraryItemId': libraryItemId,
+    if (resumeFrom != 0) 'resumeFrom': resumeFrom,
+  };
 
   factory TransferTask.fromJson(Map<String, dynamic> json) => TransferTask(
-        id: json['id'] as String,
-        fileName: json['fileName'] as String,
-        bytes: (json['bytes'] as num).toInt(),
-        totalBytes: (json['totalBytes'] as num).toInt(),
-        direction: TransferDirection.values.byName(json['direction'] as String),
-        status: TransferStatus.values.byName(json['status'] as String),
-        peerName: json['peerName'] as String,
-        peerAddress: json['peerAddress'] as String?,
-        filePath: json['filePath'] as String?,
-      );
+    id: json['id'] as String,
+    fileName: json['fileName'] as String,
+    bytes: (json['bytes'] as num).toInt(),
+    totalBytes: (json['totalBytes'] as num).toInt(),
+    direction: TransferDirection.values.byName(json['direction'] as String),
+    status: TransferStatus.values.byName(json['status'] as String),
+    peerName: json['peerName'] as String,
+    peerAddress: json['peerAddress'] as String?,
+    filePath: json['filePath'] as String?,
+    peerId: json['peerId'] as String?,
+    libraryItemId: json['libraryItemId'] as String?,
+    resumeFrom: (json['resumeFrom'] as num?)?.toInt() ?? 0,
+  );
 }

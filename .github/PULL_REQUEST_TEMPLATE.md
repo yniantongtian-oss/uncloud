@@ -25,6 +25,6 @@
 
 - [ ] My commits follow [Conventional Commits](https://www.conventionalcommits.org/)
 - [ ] `npm test` passes in `core/` (if touched)
-- [ ] `flutter analyze --no-fatal-infos` and `flutter test` pass in `app/` (if touched)
+- [ ] `flutter analyze --fatal-infos` and `flutter test` pass in `app/` (if touched)
 - [ ] I updated `docs/` and both READMEs where behavior changed
 - [ ] I follow the [Code of Conduct](../CODE_OF_CONDUCT.md) and license my contribution under [Apache-2.0](../LICENSE)
