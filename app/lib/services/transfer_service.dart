@@ -30,9 +30,13 @@ class CliTransferTransport implements TransferTransport {
       yield task.copyWith(status: TransferStatus.failed);
       return;
     }
+    final to = task.peerAddress;
+    final file = task.filePath;
+    if (to == null || !to.contains(':') || file == null || file.isEmpty) {
+      yield task.copyWith(status: TransferStatus.failed);
+      return;
+    }
     yield task.copyWith(status: TransferStatus.active);
-    final to = task.peerAddress ?? task.peerName;
-    final file = task.filePath ?? task.fileName;
     final result = await cli.run(['send', file, '--to', to]);
     if (result.exitCode == 0) {
       yield task.copyWith(bytes: task.totalBytes, status: TransferStatus.done);
@@ -63,7 +67,8 @@ class DemoTransferTransport implements TransferTransport {
 
   @override
   Stream<TransferTask> run(TransferTask task) async* {
-    var current = task.copyWith(status: TransferStatus.active);
+    final start = task.bytes < task.resumeFrom ? task.resumeFrom : task.bytes;
+    var current = task.copyWith(bytes: start, status: TransferStatus.active);
     yield current;
     const step = Duration(milliseconds: 220);
     while (current.bytes < current.totalBytes) {
@@ -81,17 +86,21 @@ class DemoTransferTransport implements TransferTransport {
 /// Owns the transfer queue and exposes live task state to the UI.
 class TransferService {
   TransferService({TransferTransport? transport})
-      : transport = transport ?? const DemoTransferTransport();
+    : transport = transport ?? const DemoTransferTransport();
 
   final TransferTransport transport;
 
   final _tasks = <TransferTask>[];
   final _controller = StreamController<List<TransferTask>>.broadcast();
+  final _updates = StreamController<TransferTask>.broadcast();
   final _activeRuns = <String, StreamSubscription<TransferTask>>{};
   int _seq = 0;
 
   /// Live view of the queue (queued + active first, then history).
   Stream<List<TransferTask>> get tasks => _controller.stream;
+
+  /// One event per task mutation, including cancel and completion.
+  Stream<TransferTask> get updates => _updates.stream;
 
   List<TransferTask> get snapshot => List.unmodifiable(_tasks);
 
@@ -103,17 +112,26 @@ class TransferService {
     required String peerName,
     String? peerAddress,
     String? filePath,
+    String? peerId,
+    String? libraryItemId,
+    int resumeFrom = 0,
   }) {
+    var start = resumeFrom;
+    if (start < 0) start = 0;
+    if (start > totalBytes && totalBytes >= 0) start = totalBytes;
     final task = TransferTask(
       id: 'task-${DateTime.now().microsecondsSinceEpoch}-${_seq++}',
       fileName: fileName,
-      bytes: 0,
+      bytes: start,
       totalBytes: totalBytes,
       direction: direction,
       status: TransferStatus.queued,
       peerName: peerName,
       peerAddress: peerAddress,
       filePath: filePath,
+      peerId: peerId,
+      libraryItemId: libraryItemId,
+      resumeFrom: start,
     );
     _tasks.insert(0, task);
     _emit();
@@ -122,49 +140,85 @@ class TransferService {
   }
 
   void cancel(String taskId) {
+    final index = _tasks.indexWhere((task) => task.id == taskId);
+    if (index < 0) return;
+    final current = _tasks[index];
+    if (current.isFinished) return;
     _activeRuns.remove(taskId)?.cancel();
-    _update(taskId, (t) => t.copyWith(status: TransferStatus.failed));
+    _tasks[index] = current.copyWith(status: TransferStatus.cancelled);
+    _emitUpdate(_tasks[index]);
     _pump();
   }
 
   void retry(String taskId) {
-    _update(
-      taskId,
-      (t) => t.copyWith(bytes: 0, status: TransferStatus.queued),
+    final index = _tasks.indexWhere((task) => task.id == taskId);
+    if (index < 0) return;
+    final current = _tasks[index];
+    if (current.status != TransferStatus.failed &&
+        current.status != TransferStatus.cancelled) {
+      return;
+    }
+    final resume = current.bytes > current.resumeFrom
+        ? current.bytes
+        : current.resumeFrom;
+    _tasks[index] = current.copyWith(
+      bytes: resume,
+      resumeFrom: resume,
+      status: TransferStatus.queued,
     );
+    _emitUpdate(_tasks[index]);
     _pump();
   }
 
+  /// Drops completed transfers. Failed and cancelled tasks stay so they can
+  /// be retried. The history button is labeled "Clear completed".
   void clearFinished() {
-    _tasks.removeWhere((t) => t.isFinished);
+    _tasks.removeWhere((task) => task.status == TransferStatus.done);
     _emit();
   }
 
   /// Starts queued tasks, one at a time (simple FIFO pump).
   void _pump() {
-    final hasActive =
-        _tasks.any((t) => t.status == TransferStatus.active);
+    final hasActive = _tasks.any((t) => t.status == TransferStatus.active);
     if (hasActive) return;
-    final nextIndex =
-        _tasks.indexWhere((t) => t.status == TransferStatus.queued);
-    if (nextIndex < 0) return;
-    final task = _tasks[nextIndex];
-    _activeRuns[task.id] = transport.run(task).listen(
-      (updated) => _update(task.id, (_) => updated),
-      onError: (_) =>
-          _update(task.id, (t) => t.copyWith(status: TransferStatus.failed)),
-      onDone: () {
-        _activeRuns.remove(task.id);
-        _pump();
-      },
+    // New tasks are inserted at index 0, so the oldest queued task is last.
+    final nextIndex = _tasks.lastIndexWhere(
+      (t) => t.status == TransferStatus.queued,
     );
+    if (nextIndex < 0) return;
+    final task = _tasks[nextIndex].copyWith(status: TransferStatus.active);
+    // Mark active before the stream runs. A transport may deliver its first
+    // event on a later turn; without this, a second enqueue would also start.
+    _tasks[nextIndex] = task;
+    _emitUpdate(task);
+    _activeRuns[task.id] = transport
+        .run(task)
+        .listen(
+          (updated) => _update(task.id, (_) => updated),
+          onError: (_) => _update(
+            task.id,
+            (t) => t.copyWith(status: TransferStatus.failed),
+          ),
+          onDone: () {
+            _activeRuns.remove(task.id);
+            _pump();
+          },
+        );
   }
 
   void _update(String id, TransferTask Function(TransferTask) update) {
     final i = _tasks.indexWhere((t) => t.id == id);
     if (i < 0) return;
-    _tasks[i] = update(_tasks[i]);
+    final current = _tasks[i];
+    // A cancel must stick even if the transport emits a late "done".
+    if (current.status == TransferStatus.cancelled) return;
+    _tasks[i] = update(current);
+    _emitUpdate(_tasks[i]);
+  }
+
+  void _emitUpdate(TransferTask task) {
     _emit();
+    if (!_updates.isClosed) _updates.add(task);
   }
 
   void _emit() {
@@ -179,5 +233,6 @@ class TransferService {
     }
     _activeRuns.clear();
     _controller.close();
+    _updates.close();
   }
 }

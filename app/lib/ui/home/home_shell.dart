@@ -1,11 +1,15 @@
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/devices_controller.dart';
+import '../../controllers/library_controller.dart';
 import '../../controllers/transfer_controller.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/media_item.dart';
 import '../../models/transfer_task.dart';
+import '../../services/core_cli.dart';
 import '../devices/devices_page.dart';
 import '../pairing/pairing_page.dart';
 import '../settings/settings_page.dart';
@@ -27,37 +31,68 @@ class _HomeShellState extends State<HomeShell> {
     final l10n = context.l10n;
     final peer = context.read<DevicesController>().primaryBackupTarget;
     if (peer == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.transfersNeedPeer)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.transfersNeedPeer)));
       return;
     }
     final file = await FilePicker.pickFile();
     if (!context.mounted) return;
     if (file == null || file.path == null) {
       if (file != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.transfersPickFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.transfersPickFailed)));
       }
       return;
     }
     final size = await file.length();
     if (!context.mounted) return;
     if (size == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.transfersPickFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.transfersPickFailed)));
       return;
     }
+    final core = context.read<CoreCli?>();
+    if (core != null && (file.path == null || file.path!.isEmpty)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.transfersPickFailed)));
+      return;
+    }
+    final String hash;
+    try {
+      final digest = await sha256.bind(file.readAsByteStream()).first;
+      hash = digest.toString();
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.transfersPickFailed)));
+      return;
+    }
+    if (!context.mounted) return;
+    final item = MediaItem(
+      id: hash,
+      path: file.path ?? file.name,
+      type: mediaTypeForName(file.name),
+      sizeBytes: size,
+      createdAt: DateTime.now(),
+      contentHash: hash,
+    );
+    await context.read<LibraryController>().upsert(item);
+    if (!context.mounted) return;
     context.read<TransferController>().enqueue(
-          fileName: file.name,
-          totalBytes: size,
-          direction: TransferDirection.send,
-          peerName: peer.name,
-          peerAddress: '${peer.host}:${peer.port}',
-          filePath: file.path,
-        );
+      fileName: file.name,
+      totalBytes: size,
+      direction: TransferDirection.send,
+      peerName: peer.name,
+      peerAddress: '${peer.host}:${peer.port}',
+      peerId: peer.deviceId,
+      filePath: file.path,
+      libraryItemId: item.id,
+    );
     setState(() => _index = 2);
   }
 
@@ -81,11 +116,7 @@ class _HomeShellState extends State<HomeShell> {
       ),
       body: IndexedStack(
         index: _index,
-        children: const [
-          TimelinePage(),
-          DevicesPage(),
-          TransfersPage(),
-        ],
+        children: const [TimelinePage(), DevicesPage(), TransfersPage()],
       ),
       floatingActionButton: _index == 2
           ? FloatingActionButton.extended(
@@ -94,15 +125,14 @@ class _HomeShellState extends State<HomeShell> {
               label: Text(l10n.transfersSendFile),
             )
           : _index == 1
-              ? FloatingActionButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                        builder: (_) => const PairingPage()),
-                  ),
-                  tooltip: l10n.devicesPairCta,
-                  child: const Icon(Icons.qr_code_2),
-                )
-              : null,
+          ? FloatingActionButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const PairingPage()),
+              ),
+              tooltip: l10n.devicesPairCta,
+              child: const Icon(Icons.qr_code_2),
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),

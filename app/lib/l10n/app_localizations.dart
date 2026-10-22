@@ -10,14 +10,13 @@ class AppLocalizations {
 
   final String localeName;
 
-  static const supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('zh'),
-  ];
+  static const supportedLocales = <Locale>[Locale('en'), Locale('zh')];
 
   static AppLocalizations of(BuildContext context) {
-    final result =
-        Localizations.of<AppLocalizations>(context, AppLocalizations);
+    final result = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
     assert(result != null, 'No AppLocalizations found in context');
     return result!;
   }
@@ -106,7 +105,6 @@ class AppLocalizations {
       'timelineRefreshFailed': 'Could not refresh the library.',
       'timelineBackupBanner': 'Auto-backup is on — new photos sync to {device}',
 
-
       // Devices
       'devicesTitle': 'Devices',
       'devicesEmptyTitle': 'No devices paired',
@@ -123,7 +121,8 @@ class AppLocalizations {
       'devicesStorageFree': '{free} free of {total}',
       'devicesBrowseFiles': 'Browse files',
       'devicesBackupNow': 'Backup now',
-      'devicesBackupStarted': 'Backup to {name} started',
+      'devicesBackupNone': 'Nothing new to back up',
+      'devicesBackupStarted': 'Backing up {count} items to {name}',
       'devicesUnpair': 'Unpair',
       'devicesUnpairConfirm': 'Unpair {name}? Transfers to it will stop.',
       'deviceDetailTitle': 'Device details',
@@ -138,8 +137,16 @@ class AppLocalizations {
       'aiFaces': 'Group by faces',
       'aiComingSoon': 'Coming soon',
       'aiComingSoonBody':
-          'On-device AI features (dedupe, faces) are coming in a future release. Everything will run locally, as always.',
-
+          'Face grouping is not ready yet. When it ships it will stay on this device. Duplicate search already runs locally.',
+      'aiDuplicatesTitle': 'Duplicates',
+      'aiDuplicatesSubtitle': 'Exact copies and lookalikes, on this device',
+      'aiDuplicatesEmptyTitle': 'No duplicates',
+      'aiDuplicatesEmptyBody':
+          'Exact copies and lookalike photos in the local library show up here. Nothing is uploaded.',
+      'aiDuplicateExact': 'Exact copies',
+      'aiDuplicateNear': 'Looks similar',
+      'aiDuplicateDistance': '{distance} bits apart',
+      'aiDuplicatesSummary': '{groups} groups · {items} files',
 
       // Transfers
       'transfersTitle': 'Transfers',
@@ -152,6 +159,7 @@ class AppLocalizations {
       'transferActive': 'Transferring',
       'transferDone': 'Completed',
       'transferFailed': 'Failed',
+      'transferCancelled': 'Cancelled',
       'transferSending': 'Sending to {name}',
       'transferReceiving': 'Receiving from {name}',
       'transferCancel': 'Cancel',
@@ -184,7 +192,6 @@ class AppLocalizations {
       'errorGeneric': 'Something went wrong. Please try again.',
       'demoModeBadge': 'Demo mode — sample data',
     },
-
 
     'zh': {
       // 通用 / 导航
@@ -243,7 +250,6 @@ class AppLocalizations {
       'timelineRefreshFailed': '无法刷新媒体库。',
       'timelineBackupBanner': '自动备份已开启——新照片将同步到 {device}',
 
-
       // 设备
       'devicesTitle': '设备',
       'devicesEmptyTitle': '尚未配对设备',
@@ -259,7 +265,8 @@ class AppLocalizations {
       'devicesStorageFree': '共 {total}，剩余 {free}',
       'devicesBrowseFiles': '浏览文件',
       'devicesBackupNow': '立即备份',
-      'devicesBackupStarted': '已开始备份到 {name}',
+      'devicesBackupNone': '没有需要备份的新内容',
+      'devicesBackupStarted': '正在将 {count} 个项目备份到 {name}',
       'devicesUnpair': '取消配对',
       'devicesUnpairConfirm': '取消与 {name} 的配对？到该设备的传输将停止。',
       'deviceDetailTitle': '设备详情',
@@ -272,8 +279,15 @@ class AppLocalizations {
       'aiDedupe': '查找重复项',
       'aiFaces': '按人脸分组',
       'aiComingSoon': '即将推出',
-      'aiComingSoonBody': '设备端 AI 功能（去重、人脸）将在未来版本中推出。一如既往，一切均在本地运行。',
-
+      'aiComingSoonBody': '人脸分组尚未就绪。上线后也只会在这台设备上运行。重复项查找已经在本地完成。',
+      'aiDuplicatesTitle': '重复项',
+      'aiDuplicatesSubtitle': '在本机比对完全相同和看起来相似的内容',
+      'aiDuplicatesEmptyTitle': '没有重复项',
+      'aiDuplicatesEmptyBody': '本地库中完全相同的副本和看起来相似的照片会显示在这里。不会上传任何内容。',
+      'aiDuplicateExact': '完全相同',
+      'aiDuplicateNear': '看起来相似',
+      'aiDuplicateDistance': '相差 {distance} 位',
+      'aiDuplicatesSummary': '{groups} 组 · {items} 个文件',
 
       // 传输
       'transfersTitle': '传输',
@@ -285,6 +299,7 @@ class AppLocalizations {
       'transferActive': '传输中',
       'transferDone': '已完成',
       'transferFailed': '失败',
+      'transferCancelled': '已取消',
       'transferSending': '正在发送到 {name}',
       'transferReceiving': '正在从 {name} 接收',
       'transferCancel': '取消',
@@ -317,7 +332,6 @@ class AppLocalizations {
       'demoModeBadge': '演示模式 — 示例数据',
     },
   };
-
 
   // General / nav
   String get appTitle => _t('appTitle');
@@ -374,7 +388,6 @@ class AppLocalizations {
   String timelineBackupBanner(String device) =>
       _p('timelineBackupBanner', {'device': device});
 
-
   // Devices
   String get devicesTitle => _t('devicesTitle');
   String get devicesEmptyTitle => _t('devicesEmptyTitle');
@@ -394,8 +407,9 @@ class AppLocalizations {
       _p('devicesStorageFree', {'free': free, 'total': total});
   String get devicesBrowseFiles => _t('devicesBrowseFiles');
   String get devicesBackupNow => _t('devicesBackupNow');
-  String devicesBackupStarted(String name) =>
-      _p('devicesBackupStarted', {'name': name});
+  String get devicesBackupNone => _t('devicesBackupNone');
+  String devicesBackupStarted(int count, String name) =>
+      _p('devicesBackupStarted', {'count': '$count', 'name': name});
   String get devicesUnpair => _t('devicesUnpair');
   String devicesUnpairConfirm(String name) =>
       _p('devicesUnpairConfirm', {'name': name});
@@ -410,6 +424,16 @@ class AppLocalizations {
   String get aiFaces => _t('aiFaces');
   String get aiComingSoon => _t('aiComingSoon');
   String get aiComingSoonBody => _t('aiComingSoonBody');
+  String get aiDuplicatesTitle => _t('aiDuplicatesTitle');
+  String get aiDuplicatesSubtitle => _t('aiDuplicatesSubtitle');
+  String get aiDuplicatesEmptyTitle => _t('aiDuplicatesEmptyTitle');
+  String get aiDuplicatesEmptyBody => _t('aiDuplicatesEmptyBody');
+  String get aiDuplicateExact => _t('aiDuplicateExact');
+  String get aiDuplicateNear => _t('aiDuplicateNear');
+  String aiDuplicateDistance(int distance) =>
+      _p('aiDuplicateDistance', {'distance': '$distance'});
+  String aiDuplicatesSummary(int groups, int items) =>
+      _p('aiDuplicatesSummary', {'groups': '$groups', 'items': '$items'});
 
   // Transfers
   String get transfersTitle => _t('transfersTitle');
@@ -425,6 +449,7 @@ class AppLocalizations {
   String get transferActive => _t('transferActive');
   String get transferDone => _t('transferDone');
   String get transferFailed => _t('transferFailed');
+  String get transferCancelled => _t('transferCancelled');
   String transferSending(String name) => _p('transferSending', {'name': name});
   String transferReceiving(String name) =>
       _p('transferReceiving', {'name': name});
@@ -433,7 +458,6 @@ class AppLocalizations {
   String get transferClearDone => _t('transferClearDone');
   String transferProgressOf(String done, String total) =>
       _p('transferProgressOf', {'done': done, 'total': total});
-
 
   // Settings
   String get settingsLanguage => _t('settingsLanguage');
@@ -458,6 +482,24 @@ class AppLocalizations {
   // Errors / misc
   String get errorGeneric => _t('errorGeneric');
   String get demoModeBadge => _t('demoModeBadge');
+
+  /// Keys present in one locale map but not the other.
+  static List<String> mismatchedTranslationKeys() {
+    final english = _strings['en'];
+    if (english == null) return const ['missing en'];
+    final englishKeys = english.keys.toSet();
+    final issues = <String>[];
+    for (final entry in _strings.entries) {
+      final keys = entry.value.keys.toSet();
+      for (final key in englishKeys.difference(keys)) {
+        issues.add('${entry.key} missing $key');
+      }
+      for (final key in keys.difference(englishKeys)) {
+        issues.add('${entry.key} extra $key');
+      }
+    }
+    return issues;
+  }
 }
 
 class _AppLocalizationsDelegate
@@ -465,8 +507,9 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => AppLocalizations.supportedLocales
-      .any((l) => l.languageCode == locale.languageCode);
+  bool isSupported(Locale locale) => AppLocalizations.supportedLocales.any(
+    (l) => l.languageCode == locale.languageCode,
+  );
 
   @override
   Future<AppLocalizations> load(Locale locale) async =>
@@ -480,4 +523,3 @@ class _AppLocalizationsDelegate
 extension AppLocalizationsX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
 }
-

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -20,10 +21,18 @@ class ReceiverService {
     final docs = await getApplicationDocumentsDirectory();
     inboxDir = '${docs.path}${Platform.pathSeparator}Uncloud';
     await Directory(inboxDir!).create(recursive: true);
-    _process = await cli.start(['serve', '--port', '$port', '--dir', inboxDir!]);
-    _process!.exitCode.then((_) {
-      _process = null;
-    });
+    _process = await cli.start([
+      'serve',
+      '--port',
+      '$port',
+      '--dir',
+      inboxDir!,
+    ]);
+    unawaited(
+      _process!.exitCode.then((_) {
+        _process = null;
+      }),
+    );
   }
 
   Future<void> stop() async {

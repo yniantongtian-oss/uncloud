@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'controllers/devices_controller.dart';
+import 'controllers/library_controller.dart';
 import 'controllers/settings_controller.dart';
+import 'controllers/sync_binder.dart';
 import 'controllers/transfer_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
@@ -26,16 +28,23 @@ Future<void> main() async {
   if (!kIsWeb) {
     cli = await CoreCli.detect();
     if (cli != null) {
-      receiver = ReceiverService(cli);
-      await receiver.start();
+      final started = ReceiverService(cli);
+      try {
+        await started.start();
+        receiver = started;
+      } on Object {
+        receiver = null;
+      }
     }
   }
 
-  runApp(UncloudApp(
-    localeController: localeController,
-    coreCli: cli,
-    receiver: receiver,
-  ));
+  runApp(
+    UncloudApp(
+      localeController: localeController,
+      coreCli: cli,
+      receiver: receiver,
+    ),
+  );
 }
 
 /// Root widget: wires providers, theme and localization.
@@ -58,7 +67,8 @@ class UncloudApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<LocaleController>.value(value: localeController),
         ChangeNotifierProvider<SettingsController>(
-            create: (_) => SettingsController()),
+          create: (_) => SettingsController(),
+        ),
         ChangeNotifierProvider<DevicesController>(
           create: (_) => DevicesController(
             discovery: DiscoveryService(demo: !useCore, cli: coreCli),
@@ -73,38 +83,43 @@ class UncloudApp extends StatelessWidget {
             ),
           ),
         ),
+        ChangeNotifierProvider<LibraryController>(
+          create: (_) => LibraryController(demo: !useCore),
+        ),
         Provider<ReceiverService?>.value(value: receiver),
         Provider<CoreCli?>.value(value: coreCli),
       ],
-      child: Consumer2<LocaleController, SettingsController>(
-        builder: (context, locale, settings, _) {
-          const seed = Colors.teal;
-          return MaterialApp(
-            onGenerateTitle: (context) => context.l10n.appTitle,
-            debugShowCheckedModeBanner: false,
-            themeMode: settings.themeMode,
-            theme: ThemeData(
-              useMaterial3: true,
-              colorScheme: ColorScheme.fromSeed(seedColor: seed),
-            ),
-            darkTheme: ThemeData(
-              useMaterial3: true,
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: seed,
-                brightness: Brightness.dark,
+      child: SyncBinder(
+        child: Consumer2<LocaleController, SettingsController>(
+          builder: (context, locale, settings, _) {
+            const seed = Colors.teal;
+            return MaterialApp(
+              onGenerateTitle: (context) => context.l10n.appTitle,
+              debugShowCheckedModeBanner: false,
+              themeMode: settings.themeMode,
+              theme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(seedColor: seed),
               ),
-            ),
-            locale: locale.locale,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            home: const OnboardingGate(),
-          );
-        },
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: seed,
+                  brightness: Brightness.dark,
+                ),
+              ),
+              locale: locale.locale,
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: const OnboardingGate(),
+            );
+          },
+        ),
       ),
     );
   }

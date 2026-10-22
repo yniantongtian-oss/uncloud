@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/devices_controller.dart';
+import '../../controllers/library_controller.dart';
 import '../../controllers/transfer_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/device.dart';
 import '../../models/transfer_task.dart';
+import '../../services/core_cli.dart';
+import '../../sync/sync_planner.dart';
 import '../../utils/format.dart';
 import '../pairing/pairing_page.dart';
 import '../widgets/empty_state.dart';
@@ -25,9 +28,9 @@ class DevicesPage extends StatelessWidget {
         title: l10n.devicesEmptyTitle,
         body: l10n.devicesEmptyBody,
         actionLabel: l10n.devicesPairCta,
-        onAction: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const PairingPage()),
-        ),
+        onAction: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const PairingPage())),
       );
     }
 
@@ -47,7 +50,7 @@ class _DeviceCard extends StatelessWidget {
   String _lastSeenLabel(BuildContext context) {
     final l10n = context.l10n;
     final diff = DateTime.now().difference(device.lastSeen);
-    if (diff.inMinutes < 1) return l10n.devicesLastSeenNow;
+    if (diff.isNegative || diff.inMinutes < 1) return l10n.devicesLastSeenNow;
     if (diff.inHours < 1) return l10n.devicesLastSeenMinutes(diff.inMinutes);
     if (diff.inDays < 1) return l10n.devicesLastSeenHours(diff.inHours);
     return l10n.devicesLastSeenDays(diff.inDays);
@@ -78,8 +81,10 @@ class _DeviceCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(device.name,
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          device.name,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         Text(
                           '${device.shortId} · ${_lastSeenLabel(context)}',
                           style: Theme.of(context).textTheme.bodySmall,
@@ -101,10 +106,7 @@ class _DeviceCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${l10n.devicesStorage}: '
-                  '${l10n.devicesStorageFree(
-                    formatBytes(device.totalStorageBytes - device.usedStorageBytes),
-                    formatBytes(device.totalStorageBytes),
-                  )}',
+                  '${l10n.devicesStorageFree(formatBytes(_freeBytes(device)), formatBytes(device.totalStorageBytes))}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -113,6 +115,12 @@ class _DeviceCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  int _freeBytes(PeerDevice device) {
+    final free = device.totalStorageBytes - device.usedStorageBytes;
+    if (free < 0) return 0;
+    return free;
   }
 
   void _showDetail(BuildContext context) {
@@ -156,61 +164,87 @@ class _DeviceDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(device.name,
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            _InfoRow(label: l10n.deviceDetailId, value: device.deviceId),
-            _InfoRow(
-              label: l10n.deviceDetailAddress,
-              value: '${device.host}:${device.port}',
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                messenger.showSnackBar(
-                  SnackBar(content: Text(l10n.deviceDetailComingSoon)),
-                );
-              },
-              icon: const Icon(Icons.folder_open),
-              label: Text(l10n.devicesBrowseFiles),
-            ),
-            const SizedBox(height: 8),
-            FilledButton.tonalIcon(
-              onPressed: () {
-                final transfers = context.read<TransferController>();
-                // Queue a small demo backup batch.
-                for (var i = 0; i < 3; i++) {
-                  transfers.enqueue(
-                    fileName: 'IMG_backup_$i.jpg',
-                    totalBytes: (4 + i) * 1024 * 1024,
-                    direction: TransferDirection.send,
-                    peerName: device.name,
-                    peerAddress: '${device.host}:${device.port}',
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                device.name,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              _InfoRow(label: l10n.deviceDetailId, value: device.deviceId),
+              _InfoRow(
+                label: l10n.deviceDetailAddress,
+                value: '${device.host}:${device.port}',
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l10n.deviceDetailComingSoon)),
                   );
-                }
-                Navigator.of(context).pop();
-                messenger.showSnackBar(
-                  SnackBar(content: Text(l10n.devicesBackupStarted(device.name))),
-                );
-              },
-              icon: const Icon(Icons.backup_outlined),
-              label: Text(l10n.devicesBackupNow),
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () => _confirmUnpair(context),
-              icon: const Icon(Icons.link_off),
-              label: Text(l10n.devicesUnpair),
-            ),
-          ],
+                },
+                icon: const Icon(Icons.folder_open),
+                label: Text(l10n.devicesBrowseFiles),
+              ),
+              const SizedBox(height: 8),
+              FilledButton.tonalIcon(
+                onPressed: () => _backupNow(context),
+                icon: const Icon(Icons.backup_outlined),
+                label: Text(l10n.devicesBackupNow),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () => _confirmUnpair(context),
+                icon: const Icon(Icons.link_off),
+                label: Text(l10n.devicesUnpair),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _backupNow(BuildContext context) async {
+    final l10n = context.l10n;
+    final library = context.read<LibraryController>();
+    await library.ready;
+    if (!context.mounted) return;
+    final core = context.read<CoreCli?>();
+    final plan = library.planFor(device.deviceId);
+    final sendable = <SyncPlanItem>[
+      for (final planned in plan.items)
+        if (core == null || !planned.item.placeholder) planned,
+    ];
+    if (sendable.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.devicesBackupNone)));
+      return;
+    }
+    final transfers = context.read<TransferController>();
+    for (final planned in sendable) {
+      final item = planned.item;
+      transfers.enqueue(
+        fileName: item.fileName,
+        totalBytes: item.sizeBytes,
+        direction: TransferDirection.send,
+        peerName: device.name,
+        peerAddress: '${device.host}:${device.port}',
+        peerId: device.deviceId,
+        filePath: item.placeholder ? null : item.path,
+        libraryItemId: item.id,
+        resumeFrom: planned.resumeFrom,
+      );
+    }
+    Navigator.of(context).pop();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.devicesBackupStarted(sendable.length, device.name)),
       ),
     );
   }
@@ -257,16 +291,16 @@ class _InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 96,
-            child: Text(label,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
-          Expanded(
-            child: Text(value, style: theme.textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );
   }
 }
-

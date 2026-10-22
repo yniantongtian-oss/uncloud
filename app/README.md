@@ -14,18 +14,15 @@ app builds and runs standalone with no companion core.
 - **Pairing** — shows this device's `uncloud://pair/...` QR code (via
   `qr_flutter`), a stubbed "scan to pair" flow, and an auto-discovery list
   with Pair buttons. Paired devices persist in `SharedPreferences`.
-- **Timeline** — photos/videos grouped by day (Today / Yesterday / full date),
-  pull-to-refresh, and a floating month scrubber label. Demo data is
-  deterministic placeholder tiles (no real photos needed).
-- **Devices** — paired-device cards with online dot, last-seen, storage bar;
-  tap for a detail sheet with *Browse files* (stub), *Backup now* (queues
-  demo transfers) and *Unpair*.
+- **Timeline** — the on-device library, grouped by day, with pull-to-refresh
+  and a floating month scrubber. Demo mode seeds placeholder tiles.
+- **Devices** — paired-device cards; *Backup now* queues only items that peer
+  does not already have (SHA-256), resuming from the last acknowledged byte.
 - **Transfers** — active queue with live progress + speed, cancel/retry,
-  clear-history; simulated LAN throughput in demo mode.
-- **Settings** — Language (English / 简体中文 / Follow system), Theme
-  (System / Light / Dark), auto-backup switch + backup-folder picker
-  (`file_picker`), local-AI "coming soon" stubs (dedupe, faces), About with
-  version and license page.
+  clear completed; simulated LAN throughput in demo mode.
+- **Settings** — language, theme, auto-backup, backup folder, on-device
+  duplicate search (exact SHA-256 and difference hash). Face grouping is
+  still marked coming soon.
 
 ## Structure
 
@@ -38,7 +35,13 @@ lib/
   models/
     device.dart                  PeerDevice
     media_item.dart              MediaItem (photo/video/file)
-    transfer_task.dart           TransferTask (queued/active/done/failed)
+    transfer_task.dart           TransferTask (queued/active/done/failed/cancelled)
+    device_directory.dart        Peer table merge rules
+  sync/
+    sync_planner.dart            What a peer is still missing
+    duplicate_assistant.dart     Exact + perceptual duplicate groups
+    difference_hash.dart         64-bit dHash
+  crypto/device_id.dart          deviceId = sha256(SPKI) prefix
   controllers/
     devices_controller.dart      Merges discovery + persisted paired devices
     transfer_controller.dart     Live task lists, speed estimates
@@ -68,7 +71,8 @@ test/
 cd app
 flutter pub get
 flutter run            # any device / emulator / desktop
-flutter test           # widget smoke tests
+flutter analyze --fatal-infos
+flutter test           # unit + widget tests
 ```
 
 First launch follows the system locale (中文系统 → 简体中文), otherwise
@@ -101,9 +105,10 @@ The app is architected so the demo pieces are drop-in replaceable:
    - Mobile: embed the core via FFI and bridge over the
      `uncloud/transfer` / `uncloud/discovery` MethodChannels
      (`ChannelTransferTransport` is the stub).
-3. **Real photo source**: replace `_buildSampleItems()` in the timeline with
-   the core's media index (or `photo_manager` on-device).
-4. **Local AI**: dedupe (perceptual hash) and face clustering run in the
-   core; the UI entries already exist behind "coming soon" chips.
+3. **Real photo source**: replace `buildSampleLibrary()` with the camera
+   roll (`photo_manager`) or the core's media index. The timeline already
+   reads `LibraryController`.
+4. **Local AI**: difference-hash dedupe runs in the app. Face clustering is
+   still a coming-soon entry.
 
 Everything stays on the user's own hardware — that is the product.

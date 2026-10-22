@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../services/settings_service.dart';
@@ -5,8 +7,8 @@ import '../services/settings_service.dart';
 /// UI-facing settings state: theme mode, auto-backup toggle, backup folder.
 class SettingsController extends ChangeNotifier {
   SettingsController({SettingsService? service})
-      : _service = service ?? SettingsService() {
-    _load();
+    : _service = service ?? SettingsService() {
+    unawaited(_load());
   }
 
   final SettingsService _service;

@@ -9,6 +9,7 @@ class PeerDevice {
     required this.lastSeen,
     this.totalStorageBytes = 0,
     this.usedStorageBytes = 0,
+    this.publicKey,
   });
 
   /// Stable unique identifier advertised over the pairing payload.
@@ -35,13 +36,16 @@ class PeerDevice {
   /// Used disk space reported by the peer (0 = unknown).
   final int usedStorageBytes;
 
+  /// Base64url SPKI DER of the peer's ed25519 public key, when pairing
+  /// proved it. Null for legacy query-string payloads that carry no key.
+  final String? publicKey;
+
   /// First 8 chars of the id, handy for compact UI display.
   String get shortId =>
       deviceId.length <= 8 ? deviceId : deviceId.substring(0, 8);
 
   /// A peer seen in the last 5 minutes is considered online.
-  bool get isOnline =>
-      DateTime.now().difference(lastSeen).inMinutes.abs() < 5;
+  bool get isOnline => DateTime.now().difference(lastSeen).inMinutes.abs() < 5;
 
   /// 0.0–1.0 disk usage fraction, or null when storage is unknown.
   double? get storageUsedFraction => totalStorageBytes > 0
@@ -57,6 +61,7 @@ class PeerDevice {
     DateTime? lastSeen,
     int? totalStorageBytes,
     int? usedStorageBytes,
+    String? publicKey,
   }) {
     return PeerDevice(
       deviceId: deviceId ?? this.deviceId,
@@ -67,30 +72,38 @@ class PeerDevice {
       lastSeen: lastSeen ?? this.lastSeen,
       totalStorageBytes: totalStorageBytes ?? this.totalStorageBytes,
       usedStorageBytes: usedStorageBytes ?? this.usedStorageBytes,
+      publicKey: publicKey ?? this.publicKey,
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'deviceId': deviceId,
-        'name': name,
-        'host': host,
-        'port': port,
-        'isPaired': isPaired,
-        'lastSeen': lastSeen.toIso8601String(),
-        'totalStorageBytes': totalStorageBytes,
-        'usedStorageBytes': usedStorageBytes,
-      };
+    'deviceId': deviceId,
+    'name': name,
+    'host': host,
+    'port': port,
+    'isPaired': isPaired,
+    'lastSeen': lastSeen.toIso8601String(),
+    'totalStorageBytes': totalStorageBytes,
+    'usedStorageBytes': usedStorageBytes,
+    if (publicKey != null) 'publicKey': publicKey,
+  };
 
   factory PeerDevice.fromJson(Map<String, dynamic> json) => PeerDevice(
-        deviceId: json['deviceId'] as String,
-        name: json['name'] as String,
-        host: json['host'] as String,
-        port: (json['port'] as num).toInt(),
-        isPaired: json['isPaired'] as bool? ?? false,
-        lastSeen: DateTime.parse(json['lastSeen'] as String),
-        totalStorageBytes: (json['totalStorageBytes'] as num?)?.toInt() ?? 0,
-        usedStorageBytes: (json['usedStorageBytes'] as num?)?.toInt() ?? 0,
-      );
+    deviceId: json['deviceId'] as String,
+    name: json['name'] as String,
+    host: json['host'] as String,
+    port: (json['port'] as num).toInt(),
+    isPaired: json['isPaired'] as bool? ?? false,
+    lastSeen: DateTime.parse(json['lastSeen'] as String),
+    totalStorageBytes: (json['totalStorageBytes'] as num?)?.toInt() ?? 0,
+    usedStorageBytes: (json['usedStorageBytes'] as num?)?.toInt() ?? 0,
+    publicKey: _nonEmptyString(json['publicKey']),
+  );
+
+  static String? _nonEmptyString(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    return value;
+  }
 
   @override
   String toString() => 'PeerDevice($shortId, $name, $host:$port)';

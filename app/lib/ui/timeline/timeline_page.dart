@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/devices_controller.dart';
+import '../../controllers/library_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/media_item.dart';
@@ -10,8 +11,8 @@ import '../widgets/empty_state.dart';
 
 /// Photo timeline grouped by day, with pull-to-refresh and a month scrubber.
 ///
-/// Demo mode: generates deterministic sample [MediaItem]s (no real photos on
-/// disk), rendered as colored placeholder containers with type icons.
+/// Items come from the on-device library. Demo mode shows the sample index
+/// (colored tiles, no real files) until a real library is stored.
 class TimelinePage extends StatefulWidget {
   const TimelinePage({super.key});
 
@@ -21,7 +22,6 @@ class TimelinePage extends StatefulWidget {
 
 class _TimelinePageState extends State<TimelinePage> {
   final _scrollController = ScrollController();
-  late List<MediaItem> _items = _buildSampleItems();
   final _monthLabel = ValueNotifier<String>('');
 
   @override
@@ -38,9 +38,12 @@ class _TimelinePageState extends State<TimelinePage> {
   }
 
   Future<void> _refresh() async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    setState(() => _items = _buildSampleItems());
+    await context.read<LibraryController>().reload();
+  }
+
+  List<MediaItem> get _items {
+    if (!mounted) return const [];
+    return context.read<LibraryController>().items;
   }
 
   /// Updates the floating month chip based on scroll offset. Uses a
@@ -51,21 +54,25 @@ class _TimelinePageState extends State<TimelinePage> {
     // ~64 px per grid row (3 columns) — cheap estimate for the scrubber.
     final row = (offset / 64).floor().clamp(0, _items.length - 1);
     final index = (row * 3).clamp(0, _items.length - 1);
-    final month = DateFormat.yMMMM(_localeTag(context))
-        .format(_items[index].createdAt);
+    final month = DateFormat.yMMMM(
+      _localeTag(context),
+    ).format(_items[index].createdAt);
     if (month != _monthLabel.value) _monthLabel.value = month;
   }
 
   String _localeTag(BuildContext context) =>
       Localizations.localeOf(context).toLanguageTag();
 
-  /// Groups items newest-first into "day sections".
-  List<_DaySection> get _sections {
+  /// Groups items newest-first into day sections.
+  List<_DaySection> _sectionsOf(List<MediaItem> items) {
     final byDay = <DateTime, List<MediaItem>>{};
-    for (final item in _items) {
+    for (final item in items) {
       final day = DateTime(
-          item.createdAt.year, item.createdAt.month, item.createdAt.day);
-      byDay.putIfAbsent(day, () => []).add(item);
+        item.createdAt.year,
+        item.createdAt.month,
+        item.createdAt.day,
+      );
+      byDay.putIfAbsent(day, () => <MediaItem>[]).add(item);
     }
     final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
     return [for (final d in days) _DaySection(d, byDay[d]!)];
@@ -85,10 +92,15 @@ class _TimelinePageState extends State<TimelinePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final sections = _sections;
+    final library = context.watch<LibraryController>();
     final settings = context.watch<SettingsController>();
     final backupTarget = context.watch<DevicesController>().primaryBackupTarget;
 
+    if (!library.isReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final sections = _sectionsOf(library.items);
     if (sections.isEmpty) {
       return EmptyState(
         icon: Icons.photo_library_outlined,
@@ -107,12 +119,25 @@ class _TimelinePageState extends State<TimelinePage> {
             itemCount: sections.length + 1,
             itemBuilder: (context, i) {
               if (i == 0) {
-                if (settings.autoBackup && backupTarget != null) {
-                  return _BackupBanner(
-                    text: l10n.timelineBackupBanner(backupTarget.name),
-                  );
-                }
-                return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    if (library.demo)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            l10n.demoModeBadge,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ),
+                      ),
+                    if (settings.autoBackup && backupTarget != null)
+                      _BackupBanner(
+                        text: l10n.timelineBackupBanner(backupTarget.name),
+                      ),
+                  ],
+                );
               }
               final section = sections[i - 1];
               return _DaySectionView(
@@ -167,16 +192,18 @@ class _BackupBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_done_outlined,
-              size: 18, color: scheme.onSecondaryContainer),
+          Icon(
+            Icons.cloud_done_outlined,
+            size: 18,
+            color: scheme.onSecondaryContainer,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSecondaryContainer),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSecondaryContainer,
+              ),
             ),
           ),
         ],
@@ -210,8 +237,9 @@ class _DaySectionView extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 countLabel,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -257,33 +285,3 @@ class _MediaTile extends StatelessWidget {
     );
   }
 }
-
-/// Deterministic sample library spanning ~8 weeks for demo mode.
-List<MediaItem> _buildSampleItems() {
-  final now = DateTime.now();
-  final items = <MediaItem>[];
-  var id = 0;
-  for (var dayOffset = 0; dayOffset < 56; dayOffset++) {
-    // Sparse days: skip some offsets so grouping looks natural.
-    if (dayOffset % 7 == 4) continue;
-    final count = 2 + (dayOffset % 5);
-    for (var i = 0; i < count; i++) {
-      final n = id++;
-      final created =
-          now.subtract(Duration(days: dayOffset, hours: 6 + i, minutes: i * 7));
-      final isVideo = (n % 9) == 0;
-      items.add(
-        MediaItem(
-          id: 'media-$n',
-          path: '/DCIM/Camera/${isVideo ? 'VID' : 'IMG'}_$n.${isVideo ? 'mp4' : 'jpg'}',
-          type: isVideo ? MediaType.video : MediaType.photo,
-          sizeBytes: (isVideo ? 24 : 3) * 1024 * 1024 + n * 1024,
-          createdAt: created,
-        ),
-      );
-    }
-  }
-  items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return items;
-}
-

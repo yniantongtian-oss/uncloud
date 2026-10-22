@@ -56,9 +56,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final pages = [
-      _Slide(icon: Icons.lock_outline, title: l10n.onbTitle1, body: l10n.onbBody1),
+      _Slide(
+        icon: Icons.lock_outline,
+        title: l10n.onbTitle1,
+        body: l10n.onbBody1,
+      ),
       _Slide(icon: Icons.devices, title: l10n.onbTitle2, body: l10n.onbBody2),
-      _Slide(icon: Icons.psychology_alt_outlined, title: l10n.onbTitle3, body: l10n.onbBody3),
+      _Slide(
+        icon: Icons.psychology_alt_outlined,
+        title: l10n.onbTitle3,
+        body: l10n.onbBody3,
+      ),
     ];
     final scheme = Theme.of(context).colorScheme;
 
@@ -68,10 +76,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _finish,
-                child: Text(l10n.onbSkip),
-              ),
+              child: TextButton(onPressed: _finish, child: Text(l10n.onbSkip)),
             ),
             Expanded(
               child: PageView.builder(
@@ -110,10 +115,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   Text(
                     l10n.tagline,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -158,10 +162,9 @@ class _Slide extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             body,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],
